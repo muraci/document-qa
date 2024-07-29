@@ -22,11 +22,7 @@ with st.sidebar:
     
     temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=0.0, step=0.01)
     
-    #use_uploaded_data = st.checkbox("Upload custom data?", value=False)
-    
-    if use_uploaded_data:
-        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-    
+
     st.header("Example Questions")
     example_questions = [
         "What is the max duration?",
@@ -58,10 +54,7 @@ def load_data(file):
     return SQLDatabase.from_uri('sqlite:///Marketing.sqlite')
 
 # Load data
-if use_uploaded_data and uploaded_file is not None:
-    input_db = load_data(uploaded_file)
-else:
-    input_db = load_data("https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign_data.csv")
+input_db = load_data("https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign_data.csv")
 
 # Function to get the first 5 rows from SQLite database
 def get_first_5_rows():
