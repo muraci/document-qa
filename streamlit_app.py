@@ -51,10 +51,6 @@ def load_data():
 # Load data and set up database
 input_db = load_data()
 
-c.execute('''SELECT * FROM Marketing''')
-for row in c.fetchall():
-    st.write(row)
-
 # Set up OpenAI LLM and SQLDatabaseChain
 @st.cache_resource
 def setup_agent(_api_key):
