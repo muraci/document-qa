@@ -11,7 +11,7 @@ from io import StringIO
 st.set_page_config(page_title="Marketing Campaign Q&A", layout="wide")
 
 # CSV URL
-CSV_URL = "https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign.csv?token=GHSAT0AAAAAACVC7FYNPDZ6UJFOX6DQWMPIZVHL7CA"
+CSV_URL = "https://drive.google.com/file/d/1o2hNhKiUXVP50zldEbpnKxfvurtdnjkD/view?usp=sharing"
 
 # Function to load data and set up database
 @st.cache_resource
