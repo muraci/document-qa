@@ -50,6 +50,7 @@ def load_data():
 
 # Load data and set up database
 input_db = load_data()
+st.write(input_db)
 
 # Set up OpenAI LLM and SQLDatabaseChain
 @st.cache_resource
