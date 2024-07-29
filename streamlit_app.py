@@ -62,7 +62,7 @@ def get_first_5_rows():
         return pd.read_sql_query("SELECT * FROM Marketing LIMIT 5", conn)
 
 # Display the first 5 rows of the database
-st.subheader("Database Preview (First 5 rows from SQLite)")
+st.subheader("Database Preview")
 st.dataframe(get_first_5_rows())
 
 # Set up OpenAI LLM and SQLDatabaseChain
