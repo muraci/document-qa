@@ -31,7 +31,7 @@ st.title("Marketing Campaign Q&A")
 # Function to load data and set up database
 @st.cache_resource
 def load_data():
-    df = pd.read_csv("https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign.csv?token=GHSAT0AAAAAACVC7FYNPDZ6UJFOX6DQWMPIZVHL7CA")
+    df = pd.read_csv("https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign.csv")
     conn = sqlite3.connect('Marketing.sqlite')
     df.to_sql('Marketing', conn, if_exists='replace', index=False)
     return SQLDatabase.from_uri('sqlite:///Marketing.sqlite'), df
