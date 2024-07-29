@@ -35,6 +35,11 @@ with st.sidebar:
     ]
     selected_question = st.selectbox("Select an example question:", [""] + example_questions)
 
+    # Additional information
+    st.markdown("---")
+    st.info("This app uses OpenAI's language model to answer questions about marketing campaign data. "
+        "Enter your API key, select a model and temperature, choose or upload data, select an example question or type your own, and click 'Get Answer' to see the results.")
+
 # Main content
 st.title("Marketing Campaign Q&A")
 
