@@ -31,17 +31,25 @@ st.title("Marketing Campaign Q&A")
 # Function to load data and set up database
 @st.cache_resource
 def load_data():
-    df = pd.read_csv("https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign.csv")
+    df = pd.read_csv("https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign.csv?token=GHSAT0AAAAAACVC7FYNPDZ6UJFOX6DQWMPIZVHL7CA")
     conn = sqlite3.connect('Marketing.sqlite')
     df.to_sql('Marketing', conn, if_exists='replace', index=False)
-    return SQLDatabase.from_uri('sqlite:///Marketing.sqlite'), df
+    return SQLDatabase.from_uri('sqlite:///Marketing.sqlite'), conn
 
 # Load data
-input_db, df = load_data()
+input_db, conn = load_data()
+
+# Function to get the first 5 rows from SQLite database
+def get_first_5_rows(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Marketing LIMIT 5")
+    columns = [description[0] for description in cursor.description]
+    rows = cursor.fetchall()
+    return pd.DataFrame(rows, columns=columns)
 
 # Display the first 5 rows of the database
-st.subheader("Database Preview (First 5 rows)")
-st.dataframe(df.head())
+st.subheader("Database Preview (First 5 rows from SQLite)")
+st.dataframe(get_first_5_rows(conn))
 
 # Set up OpenAI LLM and SQLDatabaseChain
 @st.cache_resource
