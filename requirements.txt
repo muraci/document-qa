@@ -3,4 +3,4 @@ numpy
 pandas
 langchain
 langchain_experimental
-
+openai
