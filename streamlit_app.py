@@ -8,10 +8,23 @@ from langchain_experimental.sql import SQLDatabaseChain
 # Page configuration
 st.set_page_config(page_title="Marketing Campaign Q&A", layout="wide")
 
-# Sidebar for API key input and example questions
+# Sidebar for API key input, model selection, temperature, and example questions
 with st.sidebar:
     st.title("Settings & Examples")
     api_key = st.text_input("Enter your OpenAI API key:", type="password")
+    
+    model = st.selectbox(
+        "Select OpenAI model:",
+        ["gpt-3.5-turbo-instruct", "gpt-3.5-turbo", "gpt-4-turbo"],
+        index=0
+    )
+    
+    temperature = st.slider("Temperature:", min_value=0.0, max_value=1.0, value=0.0, step=0.01)
+    
+    use_uploaded_data = st.checkbox("Upload custom data?", value=False)
+    
+    if use_uploaded_data:
+        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
     
     st.header("Example Questions")
     example_questions = [
@@ -30,15 +43,21 @@ st.title("Marketing Campaign Q&A")
 
 # Function to load data and set up database
 @st.cache_resource
-def load_data():
-    df = pd.read_csv("https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign_data.csv")
+def load_data(file_path):
+    if file_path.startswith('http'):
+        df = pd.read_csv(file_path)
+    else:
+        df = pd.read_csv(file_path)
     conn = sqlite3.connect('Marketing.sqlite')
     df.to_sql('Marketing', conn, if_exists='replace', index=False)
     conn.close()
     return SQLDatabase.from_uri('sqlite:///Marketing.sqlite')
 
 # Load data
-input_db = load_data()
+if use_uploaded_data and uploaded_file is not None:
+    input_db = load_data(uploaded_file)
+else:
+    input_db = load_data("https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign_data.csv")
 
 # Function to get the first 5 rows from SQLite database
 def get_first_5_rows():
@@ -51,15 +70,15 @@ st.dataframe(get_first_5_rows())
 
 # Set up OpenAI LLM and SQLDatabaseChain
 @st.cache_resource
-def setup_agent(_api_key):
+def setup_agent(_api_key, _model, _temperature):
     if not _api_key:
         return None
-    llm = OpenAI(temperature=0, api_key=_api_key)
+    llm = OpenAI(temperature=_temperature, api_key=_api_key, model_name=_model)
     return SQLDatabaseChain(llm=llm, database=input_db, verbose=True)
 
 # Main app logic
 if api_key:
-    db_agent = setup_agent(api_key)
+    db_agent = setup_agent(api_key, model, temperature)
     if db_agent:
         st.success("API key set and database loaded successfully!")
         
@@ -83,4 +102,4 @@ else:
 # Additional information
 st.markdown("---")
 st.info("This app uses OpenAI's language model to answer questions about marketing campaign data. "
-        "Enter your API key, select an example question or type your own, and click 'Get Answer' to see the results.")
+        "Enter your API key, select a model and temperature, choose or upload data, select an example question or type your own, and click 'Get Answer' to see the results.")
