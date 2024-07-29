@@ -4,9 +4,44 @@ import sqlite3
 from langchain.llms import OpenAI
 from langchain.sql_database import SQLDatabase
 from langchain_experimental.sql import SQLDatabaseChain
+import requests
+from io import StringIO
 
 # Page configuration
 st.set_page_config(page_title="Marketing Campaign Q&A", layout="wide")
+
+# CSV URL
+CSV_URL = "https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign.csv?token=GHSAT0AAAAAACVC7FYNPDZ6UJFOX6DQWMPIZVHL7CA"
+
+# Function to load data and set up database
+@st.cache_resource
+def load_data():
+    try:
+        # Fetch CSV content
+        response = requests.get(CSV_URL)
+        response.raise_for_status()  # Raise an exception for bad responses
+        csv_content = response.text
+
+        # Preview CSV content
+        st.subheader("CSV Content Preview")
+        st.text(csv_content[:500] + "...")  # Show first 500 characters
+
+        # Try to parse CSV
+        df = pd.read_csv(StringIO(csv_content))
+
+        # Preview DataFrame
+        st.subheader("DataFrame Preview")
+        st.dataframe(df.head())
+
+        # Create SQLite database
+        conn = sqlite3.connect('Marketing.sqlite')
+        df.to_sql('Marketing', conn, if_exists='replace', index=False)
+        conn.close()
+
+        return SQLDatabase.from_uri('sqlite:///Marketing.sqlite'), df
+    except Exception as e:
+        st.error(f"Error loading data: {str(e)}")
+        return None, None
 
 # Sidebar for API key input and example questions
 with st.sidebar:
@@ -28,57 +63,42 @@ with st.sidebar:
 # Main content
 st.title("Marketing Campaign Q&A")
 
-# Function to load data and set up database
-@st.cache_resource
-def load_data():
-    df = pd.read_csv("https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign.csv?token=GHSAT0AAAAAACVC7FYNPDZ6UJFOX6DQWMPIZVHL7CA")
-    conn = sqlite3.connect('Marketing.sqlite')
-    df.to_sql('Marketing', conn, if_exists='replace', index=False)
-    conn.close()
-    return SQLDatabase.from_uri('sqlite:///Marketing.sqlite'), df
-
 # Load data
-input_db = load_data()
+input_db, df = load_data()
 
-# Function to get the first 5 rows from SQLite database
-def get_first_5_rows():
-    with sqlite3.connect('Marketing.sqlite') as conn:
-        return pd.read_sql_query("SELECT * FROM Marketing LIMIT 5", conn)
+if input_db is not None and df is not None:
+    # Set up OpenAI LLM and SQLDatabaseChain
+    @st.cache_resource
+    def setup_agent(_api_key):
+        if not _api_key:
+            return None
+        llm = OpenAI(temperature=0, api_key=_api_key)
+        return SQLDatabaseChain(llm=llm, database=input_db, verbose=True)
 
-# Display the first 5 rows of the database
-st.subheader("Database Preview (First 10 rows from SQLite)")
-st.dataframe(df.head())
-
-# Set up OpenAI LLM and SQLDatabaseChain
-@st.cache_resource
-def setup_agent(_api_key):
-    if not _api_key:
-        return None
-    llm = OpenAI(temperature=0, api_key=_api_key)
-    return SQLDatabaseChain(llm=llm, database=input_db, verbose=True)
-
-# Main app logic
-if api_key:
-    db_agent = setup_agent(api_key)
-    if db_agent:
-        st.success("API key set and database loaded successfully!")
-        
-        # User input for question
-        user_question = st.text_input("Ask a question about the marketing campaign data:", value=selected_question)
-        
-        if user_question:
-            if st.button("Get Answer"):
-                try:
-                    with st.spinner("Generating answer..."):
-                        result = db_agent.run(user_question)
-                    st.subheader("Answer:")
-                    st.write(result)
-                except Exception as e:
-                    st.error(f"An error occurred: {str(e)}")
+    # Main app logic
+    if api_key:
+        db_agent = setup_agent(api_key)
+        if db_agent:
+            st.success("API key set and database loaded successfully!")
+            
+            # User input for question
+            user_question = st.text_input("Ask a question about the marketing campaign data:", value=selected_question)
+            
+            if user_question:
+                if st.button("Get Answer"):
+                    try:
+                        with st.spinner("Generating answer..."):
+                            result = db_agent.run(user_question)
+                        st.subheader("Answer:")
+                        st.write(result)
+                    except Exception as e:
+                        st.error(f"An error occurred: {str(e)}")
+        else:
+            st.error("Failed to set up the database agent. Please check your API key.")
     else:
-        st.error("Failed to set up the database agent. Please check your API key.")
+        st.warning("Please enter your OpenAI API key in the sidebar to proceed.")
 else:
-    st.warning("Please enter your OpenAI API key in the sidebar to proceed.")
+    st.error("Failed to load the data. Please check the CSV file and try again.")
 
 # Additional information
 st.markdown("---")
