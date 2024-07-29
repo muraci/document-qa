@@ -34,7 +34,7 @@ def load_data():
     df = pd.read_csv("https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign.csv?token=GHSAT0AAAAAACVC7FYNPDZ6UJFOX6DQWMPIZVHL7CA")
     conn = sqlite3.connect('Marketing.sqlite')
     df.to_sql('Marketing', conn, if_exists='replace', index=False)
-    return SQLDatabase.from_uri('sqlite:///Marketing.sqlite')
+    return SQLDatabase.from_uri('sqlite:///Marketing.sqlite'), df
 
 # Load data
 input_db, df = load_data()
