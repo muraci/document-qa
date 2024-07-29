@@ -35,7 +35,7 @@ def load_data():
     conn = sqlite3.connect('Marketing.sqlite')
     df.to_sql('Marketing', conn, if_exists='replace', index=False)
     conn.close()
-    return SQLDatabase.from_uri('sqlite:///Marketing.sqlite')
+    return SQLDatabase.from_uri('sqlite:///Marketing.sqlite'), df
 
 # Load data
 input_db = load_data()
@@ -47,7 +47,7 @@ def get_first_5_rows():
 
 # Display the first 5 rows of the database
 st.subheader("Database Preview (First 10 rows from SQLite)")
-st.dataframe(get_first_5_rows())
+st.dataframe(df.head()
 
 # Set up OpenAI LLM and SQLDatabaseChain
 @st.cache_resource
