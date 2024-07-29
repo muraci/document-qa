@@ -47,7 +47,7 @@ def get_first_5_rows():
 
 # Display the first 5 rows of the database
 st.subheader("Database Preview (First 10 rows from SQLite)")
-st.dataframe(df.head()
+st.dataframe(df.head())
 
 # Set up OpenAI LLM and SQLDatabaseChain
 @st.cache_resource
