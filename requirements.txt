@@ -2,6 +2,5 @@ streamlit
 numpy
 pandas
 langchain
-langchain.
 langchain_experimental
 warnings
