@@ -10,16 +10,17 @@ st.set_page_config(page_title="Marketing Campaign Q&A", layout="wide")
 
 # Sidebar for API key input, model selection, temperature, and example questions
 with st.sidebar:
-    st.title("Settings & Examples")
+    st.header("Setup")
     api_key = st.text_input("Enter your OpenAI API key:", type="password")
-    
+
+    st.header("Text Generation Model")
     model = st.selectbox(
-        "Select OpenAI model:",
+        "Choose a model",
         ["gpt-3.5-turbo-instruct", "gpt-3.5-turbo", "gpt-4-turbo"],
         index=0
     )
     
-    temperature = st.slider("Temperature:", min_value=0.0, max_value=1.0, value=0.0, step=0.01)
+    temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=0.0, step=0.01)
     
     use_uploaded_data = st.checkbox("Upload custom data?", value=False)
     
