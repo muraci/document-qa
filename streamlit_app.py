@@ -24,8 +24,8 @@ with st.sidebar:
     
     #use_uploaded_data = st.checkbox("Upload custom data?", value=False)
     
-    #if use_uploaded_data:
-    #    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+    if use_uploaded_data:
+        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
     
     st.header("Example Questions")
     example_questions = [
