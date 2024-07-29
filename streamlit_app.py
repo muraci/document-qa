@@ -22,7 +22,7 @@ with st.sidebar:
     
     temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=0.0, step=0.01)
     
-    use_uploaded_data = st.checkbox("Upload custom data?", value=False)
+    #use_uploaded_data = st.checkbox("Upload custom data?", value=False)
     
     #if use_uploaded_data:
     #    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
