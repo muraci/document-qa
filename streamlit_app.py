@@ -100,8 +100,3 @@ if api_key:
         st.error("Failed to set up the database agent. Please check your API key.")
 else:
     st.warning("Please enter your OpenAI API key in the sidebar to proceed.")
-
-# Additional information
-st.markdown("---")
-st.info("This app uses OpenAI's language model to answer questions about marketing campaign data. "
-        "Enter your API key, select a model and temperature, choose or upload data, select an example question or type your own, and click 'Get Answer' to see the results.")
