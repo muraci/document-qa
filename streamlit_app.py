@@ -43,11 +43,14 @@ st.title("Marketing Campaign Q&A")
 
 # Function to load data and set up database
 @st.cache_resource
-def load_data(file_path):
-    if file_path.startswith('http'):
-        df = pd.read_csv(file_path)
+def load_data(file):
+    if isinstance(file, str) and file.startswith('http'):
+        df = pd.read_csv(file)
+    elif hasattr(file, 'read'):  # Check if it's a file-like object (UploadedFile)
+        df = pd.read_csv(file)
     else:
-        df = pd.read_csv(file_path)
+        raise ValueError("Invalid input. Expected a URL string or an uploaded file.")
+    
     conn = sqlite3.connect('Marketing.sqlite')
     df.to_sql('Marketing', conn, if_exists='replace', index=False)
     conn.close()
