@@ -1,7 +1,7 @@
 streamlit
 numpy
 pandas
-langchain.llms
-langchain.sql_database
-langchain_experimental.sql
+langchain
+langchain.
+langchain_experimental
 warnings
