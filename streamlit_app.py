@@ -4,47 +4,14 @@ import sqlite3
 from langchain.llms import OpenAI
 from langchain.sql_database import SQLDatabase
 from langchain_experimental.sql import SQLDatabaseChain
-from io import StringIO
 
 # Page configuration
 st.set_page_config(page_title="Marketing Campaign Q&A", layout="wide")
 
-# Function to load data and set up database
-@st.cache_resource
-def load_data(file, delimiter):
-    try:
-        # Read CSV file
-        df = pd.read_csv(file, delimiter=delimiter)
-
-        # Preview DataFrame
-        st.subheader("DataFrame Preview")
-        st.dataframe(df.head())
-
-        # Display DataFrame info
-        st.subheader("DataFrame Info")
-        buffer = StringIO()
-        df.info(buf=buffer)
-        s = buffer.getvalue()
-        st.text(s)
-
-        # Create SQLite database
-        conn = sqlite3.connect('Marketing.sqlite')
-        df.to_sql('Marketing', conn, if_exists='replace', index=False)
-        conn.close()
-
-        return SQLDatabase.from_uri('sqlite:///Marketing.sqlite'), df
-    except Exception as e:
-        st.error(f"Error loading data: {str(e)}")
-        return None, None
-
-# Sidebar for settings and example questions
+# Sidebar for API key input and example questions
 with st.sidebar:
     st.title("Settings & Examples")
     api_key = st.text_input("Enter your OpenAI API key:", type="password")
-    
-    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-    
-    delimiter = st.selectbox("Select CSV delimiter:", [",", ";", "|", "\t"], index=0)
     
     st.header("Example Questions")
     example_questions = [
@@ -61,49 +28,59 @@ with st.sidebar:
 # Main content
 st.title("Marketing Campaign Q&A")
 
+# Function to load data and set up database
+@st.cache_resource
+def load_data():
+    df = pd.read_csv("https://raw.githubusercontent.com/muraci/document-qa/main/marketing_campaign_data.csv")
+    conn = sqlite3.connect('Marketing.sqlite')
+    df.to_sql('Marketing', conn, if_exists='replace', index=False)
+    conn.close()
+    return SQLDatabase.from_uri('sqlite:///Marketing.sqlite')
+
 # Load data
-if uploaded_file is not None:
-    if st.button("Load Data"):
-        input_db, df = load_data(uploaded_file, delimiter)
+input_db = load_data()
 
-        if input_db is not None and df is not None:
-            # Set up OpenAI LLM and SQLDatabaseChain
-            @st.cache_resource
-            def setup_agent(_api_key):
-                if not _api_key:
-                    return None
-                llm = OpenAI(temperature=0, api_key=_api_key)
-                return SQLDatabaseChain(llm=llm, database=input_db, verbose=True)
+# Function to get the first 5 rows from SQLite database
+def get_first_5_rows():
+    with sqlite3.connect('Marketing.sqlite') as conn:
+        return pd.read_sql_query("SELECT * FROM Marketing LIMIT 5", conn)
 
-            # Main app logic
-            if api_key:
-                db_agent = setup_agent(api_key)
-                if db_agent:
-                    st.success("API key set and database loaded successfully!")
-                    
-                    # User input for question
-                    user_question = st.text_input("Ask a question about the marketing campaign data:", value=selected_question)
-                    
-                    if user_question:
-                        if st.button("Get Answer"):
-                            try:
-                                with st.spinner("Generating answer..."):
-                                    result = db_agent.run(user_question)
-                                st.subheader("Answer:")
-                                st.write(result)
-                            except Exception as e:
-                                st.error(f"An error occurred: {str(e)}")
-                else:
-                    st.error("Failed to set up the database agent. Please check your API key.")
-            else:
-                st.warning("Please enter your OpenAI API key in the sidebar to proceed.")
-        else:
-            st.error("Failed to load the data. Please check the CSV file and try again.")
+# Display the first 5 rows of the database
+st.subheader("Database Preview (First 5 rows from SQLite)")
+st.dataframe(get_first_5_rows())
+
+# Set up OpenAI LLM and SQLDatabaseChain
+@st.cache_resource
+def setup_agent(_api_key):
+    if not _api_key:
+        return None
+    llm = OpenAI(temperature=0, api_key=_api_key)
+    return SQLDatabaseChain(llm=llm, database=input_db, verbose=True)
+
+# Main app logic
+if api_key:
+    db_agent = setup_agent(api_key)
+    if db_agent:
+        st.success("API key set and database loaded successfully!")
+        
+        # User input for question
+        user_question = st.text_input("Ask a question about the marketing campaign data:", value=selected_question)
+        
+        if user_question:
+            if st.button("Get Answer"):
+                try:
+                    with st.spinner("Generating answer..."):
+                        result = db_agent.run(user_question)
+                    st.subheader("Answer:")
+                    st.write(result)
+                except Exception as e:
+                    st.error(f"An error occurred: {str(e)}")
+    else:
+        st.error("Failed to set up the database agent. Please check your API key.")
 else:
-    st.info("Please upload a CSV file in the sidebar to begin.")
+    st.warning("Please enter your OpenAI API key in the sidebar to proceed.")
 
 # Additional information
 st.markdown("---")
 st.info("This app uses OpenAI's language model to answer questions about marketing campaign data. "
-        "Upload your CSV file, enter your API key, select the correct CSV delimiter, load the data, "
-        "then select an example question or type your own, and click 'Get Answer' to see the results.")
+        "Enter your API key, select an example question or type your own, and click 'Get Answer' to see the results.")
