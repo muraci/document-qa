@@ -1,2 +1,10 @@
 streamlit
 openai
+os
+numpy
+pandas
+sqlite3
+langchain.llms
+langchain.sql_database
+langchain_experimental.sql
+warnings
